@@ -1,0 +1,42 @@
+anand@ip-172-31-5-105:~$ kubectl get nodes
+NAME               STATUS   ROLES    AGE   VERSION
+ip-172-31-0-74     Ready    <none>   43m   v1.18.5
+ip-172-31-11-242   Ready    <none>   43m   v1.18.5
+ip-172-31-5-105    Ready    master   55m   v1.18.5
+
+anand@ip-172-31-5-105:~$ kubectl describe node ip-172-31-5-105
+Name:               ip-172-31-5-105
+Roles:              master
+Labels:             beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/os=linux
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=ip-172-31-5-105
+                    kubernetes.io/os=linux
+                    node-role.kubernetes.io/master=    =====it is labeled as master====
+Annotations:        kubeadm.alpha.kubernetes.io/cri-socket: /var/run/dockershim.sock
+                    node.alpha.kubernetes.io/ttl: 0
+                    projectcalico.org/IPv4Address: 172.31.5.105/20
+                    projectcalico.org/IPv4IPIPTunnelAddr: 192.168.148.192
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Thu, 30 Dec 2021 09:21:18 +0000
+Taints:             node-role.kubernetes.io/master:NoSchedule
+Unschedulable:      false
+Lease:
+  HolderIdentity:  ip-172-31-5-105
+  AcquireTime:     <unset>
+  RenewTime:       Thu, 30 Dec 2021 10:14:34 +0000
+Conditions:
+
+anand@ip-172-31-5-105:~$ kubectl label node ip-172-31-0-74 node-role.kubernetes.io/worker1=
+			===we labeled ip-172-31-0-74  as WORKER1===
+node/ip-172-31-0-74 labeled
+
+anand@ip-172-31-5-105:~$ kubectl label node ip-172-31-11-242  node-role.kubernetes.io/worker2=
+			===we labeled ip-172-31-11-242 as WORKER2===
+node/ip-172-31-11-242 labeled
+
+anand@ip-172-31-5-105:~$ kubectl get nodes
+NAME               STATUS   ROLES            AGE   VERSION
+ip-172-31-0-74     Ready    worker,worker1   46m   v1.18.5
+ip-172-31-11-242   Ready    worker2          46m   v1.18.5
+ip-172-31-5-105    Ready    master           58m   v1.18.5
