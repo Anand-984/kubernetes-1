@@ -1,0 +1,44 @@
+===if you remove the "Taints" then only the pod will run on the Master node===   
+node-role.kubernetes.io/master:NoSchedule ====>to=======> node-role.kubernetes.io/master:NoSchedule-
+
+anand@ip-172-31-5-105:~$ kubectl describe node ip-172-31-5-105 | less
+
+Name:               ip-172-31-5-105
+Roles:              master
+Labels:             beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/os=linux
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=ip-172-31-5-105
+                    kubernetes.io/os=linux
+                    node-role.kubernetes.io/master=
+Annotations:        kubeadm.alpha.kubernetes.io/cri-socket: /var/run/dockershim.sock
+                    node.alpha.kubernetes.io/ttl: 0
+                    projectcalico.org/IPv4Address: 172.31.5.105/20
+                    projectcalico.org/IPv4IPIPTunnelAddr: 192.168.148.192
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Thu, 30 Dec 2021 09:21:18 +0000
+Taints:             node-role.kubernetes.io/master:NoSchedule   ===look out here "taints"====
+Unschedulable:      false
+
+anand@ip-172-31-5-105:~$ kubectl taint node ip-172-31-5-105 node-role.kubernetes.io/master:NoSchedule-     ===just we added a - at the end====
+node/ip-172-31-5-105 untainted
+
+anand@ip-172-31-5-105:~$ kubectl describe node ip-172-31-5-105 | less
+Name:               ip-172-31-5-105
+Roles:              master
+Labels:             beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/os=linux
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=ip-172-31-5-105
+                    kubernetes.io/os=linux
+                    node-role.kubernetes.io/master=
+Annotations:        kubeadm.alpha.kubernetes.io/cri-socket: /var/run/dockershim.sock
+                    node.alpha.kubernetes.io/ttl: 0
+                    projectcalico.org/IPv4Address: 172.31.5.105/20
+                    projectcalico.org/IPv4IPIPTunnelAddr: 192.168.148.192
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Thu, 30 Dec 2021 09:21:18 +0000
+Taints:             <none>    ==== now look at here it is changed from NoSchedule to none=====
+Unschedulable:      false
+
+======= now pods will run on the master node also===========
