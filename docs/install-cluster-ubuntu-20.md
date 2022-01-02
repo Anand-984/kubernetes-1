@@ -103,3 +103,8 @@ kubectl get cs
 ```
 
 Have Fun!!
+#### to delete kubernetes components
+$ kubeadm reset
+$ sudo apt-get purge kubeadm kubectl kubelet kubernetes-cni kube*   
+$ sudo apt-get autoremove  
+$ sudo rm -rf ~/.kube
