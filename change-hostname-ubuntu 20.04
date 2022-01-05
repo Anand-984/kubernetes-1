@@ -1,0 +1,35 @@
+ubuntu@ip-172-31-1-131:~$ hostnamectl
+   Static hostname: ip-172-31-1-131
+         Icon name: computer-vm
+           Chassis: vm
+        Machine ID: ec2a33352666cf37118cf2d2724ea7df
+           Boot ID: 1d84f3209a7f4bb0ae884f39b8ddde58
+    Virtualization: kvm
+  Operating System: Ubuntu 20.04.3 LTS
+            Kernel: Linux 5.11.0-1022-aws
+      Architecture: x86-64
+ubuntu@ip-172-31-1-131:~$ cat /etc/hostname
+ip-172-31-1-131
+ubuntu@ip-172-31-1-131:~$ echo "$HOSTNAME"
+ip-172-31-1-131
+ubuntu@ip-172-31-1-131:~$ sudo hostnamectl set-hostname master
+
+ubuntu@ip-172-31-1-131:~$ hostnamectl
+   Static hostname: master
+         Icon name: computer-vm
+           Chassis: vm
+        Machine ID: ec2a33352666cf37118cf2d2724ea7df
+           Boot ID: 1d84f3209a7f4bb0ae884f39b8ddde58
+    Virtualization: kvm
+  Operating System: Ubuntu 20.04.3 LTS
+            Kernel: Linux 5.11.0-1022-aws
+      Architecture: x86-64
+ubuntu@ip-172-31-1-131:~$ sudo vi /etc/hosts
+=====Update/append:====
+172.31.1.131 master
+
+ubuntu@ip-172-31-1-131:~$ cat /etc/hostname
+master
+ubuntu@ip-172-31-1-131:~$ hostnamectl status --static
+master
+ubuntu@ip-172-31-1-131:~$ sudo reboot
