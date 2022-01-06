@@ -1,0 +1,72 @@
+ubuntu@master:~$ vim pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+   name: test1
+   labels:
+      app: frontend
+spec:
+   containers:
+   - name: appone
+     image: nginx
+                 
+ubuntu@master:~$ kubectl create -f pod.yaml
+pod/test1 created
+
+ubuntu@master:~$ kubectl get pods
+NAME    READY   STATUS    RESTARTS   AGE
+test1   1/1     Running   0          108s
+ubuntu@master:~$ kubectl describe pod test1 | less
+
+ubuntu@master:~$ kubectl delete pod test1 --now
+
+ubuntu@master:~$ kubectl run test2 --image=nginx --dry-run=client -o yaml > test2.yaml
+ubuntu@master:~$ vim test2.yaml 
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: test2
+  name: test2
+spec:
+  containers:
+  - image: nginx
+    name: test2
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+
+ubuntu@master:~$ kubectl create -f test2.yaml
+pod/test2 created
+ubuntu@master:~$ kubectl run test3 --image=nginx
+pod/test3 created
+ubuntu@master:~$ vim multi.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: multi
+  name: multi
+spec:
+  containers:
+  - image: nginx
+    name: multi1
+  - image: busybox
+    name: multi2
+    command: ['sh','-c','echo help && sleep 360']
+ubuntu@master:~$ kubectl apply -f multi.yaml 
+ubuntu@master:~$ kubectl get pods
+NAME    READY   STATUS    RESTARTS   AGE
+multi   2/2     Running   0          28s
+test2   1/1     Running   0          9m7s
+test3   1/1     Running   0          7m49s
+ubuntu@master:~$ kubectl get pods -o wide
+NAME    READY   STATUS    RESTARTS   AGE     IP                NODE              NOMINATED NODE   READINESS GATES
+multi   2/2     Running   0          2m58s   192.168.87.149    ip-172-31-8-32    <none>           <none>
+test2   1/1     Running   0          11m     192.168.210.212   ip-172-31-7-116   <none>           <none>
+test3   1/1     Running   0          10m     192.168.87.148    ip-172-31-8-32    <none>           <none>
+
+ubuntu@master:~$ kubectl describe pod test3 | less
