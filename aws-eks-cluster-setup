@@ -1,0 +1,201 @@
+===============how to create eks cluster on AWS(using aws management console)============
+
+=====topics covered=====
+=>*introduction to amazon eks cluster 
+	it is completly managed service by aws .it can be integrated with other services like cloud wacth autoscaling route53 and other services too.these things can help you to monitor the applications and scaling when there is a need avilability to distribute the load.
+	
+=>*benifits of aws eks cluster
+AWS EKS provides a scalable and HA controle plane so you dont need worrie about the master node controle plane any more.this will run accross multiple availabilty zones to eliminate a single point of failures
+
+=>*different ways to setup the aws eks cluster
+	-AWS Management console
+	-eksctl utility provided by AWS (commandline utility)
+	-IAC (terraform,Ansible)
+=>*prerequisites to create aws eks cluster
+	-AWS Account with Admin privileges (if you are going to create cluster using the aws console then you should have a management console access and if you are using  eks controle utility then you must have programatic access )
+	-AWS CLI access to use kubectl utility
+	-Instance (to manage cluster by using kubectl)
+=>*step by step procedure to setup aws eks cluster  ( 1to4 for eks cluster setup  5to7 for the worker nodes )
+	step1: create IAM role for EKS custer
+	step2: create dedicated vpc for the EKS cluster       through cloud foramation 
+	step3: create EKS cluster
+	step4: install & setup IAM authenticator and kubectl utility   (to manage the cluster)
+	step5: create IAM role for EKS worker nodes
+	step6: create worker nodes
+	step7: deploying demo application
+=>*deployment of demo application
+
+
+step1: login to aws IAM console=>create role=>go for EKS=>select use case eks-cluster =>click on next permissions=>let it be the default amazonEKSCluster policy=>click on the tags=>next review=>
+	role name:eks-cluster-role
+	Role Description: Allows access to other aws service resources that are required to operate clusters managed by EKS
+	=>click on create a role
+	
+step2: goto cloudformation => click on create stack=> select templete is ready => select templete resource as Amazon s3 URL=>Amazon s3 URL: https://amazon-eks.s3.us-west-2.amazonaws.com/cloudformation/2020-04-21/amazon-eks-vpc-private-subnets.yaml  =>click on next (it will create the vpc by using the cloudformation templete)=> stack name: eks-vpc-stack =>click on next=> configure stack options (default) =>click on next=>click on create stack.
+                    goto vpc section and verify 
+                    
+step3: goto eks=>create cluster=> Name: eks-cluster
+				   kubernetes version: 1.16
+				   cluster service role: select the role which are created(eks-cluster-role)
+				   =>click on next
+				   =>vpc: select the dedicated vpc which we are created using the cloudformation templete
+				   =>security groups: select eks vpc security stack created by stack(not the defult)
+				   =>cluster endpoint access: select public and private
+				   =>click on next 
+				   =>configure logging=>if you want to enable the logging you can select the options
+				   =>click on next
+				   =>click on create
+ this will take 15 min to create the master cotrole plane 
+ 
+step4: login  to the instance and setup aws cli and configure the aws cli and makesure that you are able to access aws environment
+ 	>aws iam list-users
+ 	  it lists the users in your aws account
+ 	> aws sts get-caller-identity
+ 	 
+  now we need to install the kubectl and aws-iam-authenticator in this instance.
+    => goto goole search for iam authenticator  select the aws document and install the iam authenticator 
+     once it is installed execute the command    >aws-iam-authenticator
+    =>goto goole search for install kubectl aws select the aws document and install the kubectl
+    once it is installed execute th ecommand    > kubectl version --short --client
+    						  > kubectl get svc
+    		you get the error like this	   the connection  to the server localhost:8080 was refused - did you specify the right host or path
+    
+     we need to update the kubeconfig into a profile from where you will be managing your entair eks cluster
+                                          > aws eks --region us-east-1 update-kubeconfig --name eks-cluster
+                                           added new context arn to /home/ubuntu/.kube/config
+                                          > more /home/ubuntu/.kube/config
+                                          this will have the complete information about the cluster
+                                          
+     you should have the .kube/config if not the command will not work  
+     
+     					   > export KUBECONFIG=~/.kube/config
+     					   > kubect get svc
+                                          now you didn't ge any error
+                                          > kubectl get nodes
+                                         till now we are not created any worker nodes
+                                          > kubectl get ns
+                                          
+step5: goto iam =>create role =>aws service => select the EC2 use case =>next permissions => attach the fallowing the policies
+								AmazonEKS_CNI_policy
+								AmazonEKSWorkerNodePolicy
+								AmazonEC2ContainerRegistryReadOnly
+=>next tags =>click on next review=> Role name: eks-workernode-role
+				      Role Description: Amazon EKS role   => click on create role
+				     
+step6: goto eks service => click on the cluster name goto the compute tab =>click on add node group
+                                                                                Name: eks-worker-node-group
+                                                                                Node IAM role: select the eksworkernoderole
+                                                                                enable the remote access to nodes
+                                                                                select the right SSH Keypair
+                                                                                select the security group default
+                                                                                =>click on next
+                                                                                select the AMI and instance type 
+                                                                                => click on next
+                                                                                select the configuration for the autoscaling
+                                                                                =>cllick on next => click on create 
+                                                                                
+                                                                                
+goto compute tab =>click on nodegroup name here you will have complete information about the node group                                                                                                        					
+ now goto instance 
+                   > kubectl get nodes     
+                   >kubectl get svc 
+                   > git clone https://github.com/learnitguide/kubernetes-knote.git
+                   > cd kubernetes-knote
+                   > vim mango.yaml                             deploying the 2-tier application frotend is knode backend is mango
+                       apiVersion: app/v1
+                       kind: Deployment
+                       metadata: 
+                          name: mongo
+                       spec:
+                        replicas: 2
+                        selector: 
+                          matchLabels: 
+                               app: mango
+                               tier: backend
+                          template:
+                            matadata:
+                            labels:
+                              app: mango
+                              tier: backend
+                          spec:
+                            conntainers: 	
+                              - name: mango
+                                image: mango
+                                ports:
+                                  - containerPort: 27017
+                          ---
+                          apiVersion: v1
+                          kind: service
+                          metadata: 
+                            name: mango
+                          spec: 
+                            selector:
+                               app: mango
+                               tier: backend
+                            ports:
+                             - port: 27017
+                               targetPort: 27017
+                            type: ClusterIP 
+                          
+                          
+                      > vim knote.yaml
+                       apiVersion: app/v1
+                       kind: Deployment
+                       metadata: 
+                          name: knote
+                       spec:
+                        replicas: 2
+                        selector: 
+                          matchLabels: 
+                               app: knote
+                               tier: frontend
+                          template:
+                            matadata:
+                            labels:
+                              app: knote
+                              tier: frontend
+                          spec:
+                            conntainers: 	
+                              - name: app
+                                image: learnitguide/knotejs:1.0
+                                ports:
+                                  - containerPort: 3000
+                                env:
+                                  - name: MONGO_URL
+                                    value: mogodb://mongo:27017/dev
+                          ---
+                          apiVersion: v1
+                          kind: service
+                          metadata: 
+                            name: knote
+                          spec: 
+                            selector:
+                               app: knote
+                               tier: frontend
+                            ports:
+                              - port: 80
+                                targetPort: 3000
+                                nodePort: 30000
+                            type: LoadBalancer
+                            
+            > kubectl apply -f mongo.yaml
+            > kubectl apply -f knote.yaml
+            > kubectl get svc
+            > kubectl get pods -o wide 
+            > kubectl get svc        you can find the external-ip of type load balancer
+            > nslookup <EXTERNAL-IP>
+            > curl <EXTERNAL-IP>
+                        
+               open the browser and enter the <EXTERNAL-IP>
+                            
+                          
+                                  
+                           
+                             
+                          
+                                     
+ 
+ 
+ 
+  				   
+
