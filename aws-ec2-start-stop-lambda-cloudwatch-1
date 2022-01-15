@@ -1,0 +1,127 @@
+How to automatically stop/start EC2 instances using aws-lambda and cloudwatch events scheduler
+https://youtu.be/instSVC6gk0
+
+ref link: https://aws.amazon.com/premiumsupport/knowledge-center/start-stop-lambda-eventbridge/
+To stop and start EC2 instances at regular intervals using Lambda, do the following:
+
+1.    Create a custom AWS Identity and Access Management (IAM) policy and execution role for your Lambda function.
+
+2.    Create Lambda functions that stop and start your EC2 instances.
+
+3.    Test your Lambda functions.
+
+==1.Goto iam -> policies-> create policy->JSON-> add the bellow code 
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:*:*:*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:Start*",
+        "ec2:Stop*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+  							( or )
+  							
+  Goto iam -> policies-> create policy->visual editor->
+  							service: select ec2 service
+  							Actions: write select the stop/start instances
+  							Resources: All resources
+  								add ARN 
+  								    region:us-east-1
+  								    Account:9130536247895
+  								    instanceid:i-06ef235dfg12ef
+  							->click on review policy->
+  										Name:ec2-stop/start
+  										Description:stop/start the ec2 instance
+  														->create policy
+2. create role->AWS service->lambda->nextpermission->attach the above created policy(ec2-stop/start)->next add tags->review->
+ Role name: EC2-stop-role
+ Role description: Allows Lambda function to call EC2 sevices on your behalf
+ -> create a role
+ 
+3.Goto lambda->Author from scrach->
+				function name:stop-ec2-instance
+				runtime: python 3.7
+				execution role: select use an exixting role(ec2 stop role)-> creater function
+	fucntion code-> add the below code
+import boto3
+region = 'us-west-1'
+instances = ['i-12345cb6de4f78g9h', 'i-08ce9b2d7eccf6d26']
+ec2 = boto3.client('ec2', region_name=region)
+
+def lambda_handler(event, context):
+    ec2.stop_instances(InstanceIds=instances)
+    print('stopped your instances: ' + str(instances))			
+				
+				->save  ->test ->
+						event name: testevent
+									->create
+and then click on test ->it should be suceeded it will stop the instance.
+
+to automate the events we use the cloudwatch->
+4.Goto Cloudwatch->Events->rules-> create rules->
+						select schedule
+						cron expression: 19 20 29 6 ? *  this is based on gmt time zone
+						everyyear 29th june 8:19 pm          			
+						
+						Target->add target->select the function -> configure details->
+													name:ec2-stop
+													description:stopping the instance
+													->create rule
+	now it will trigger and stop the ec2 instance.
+	
+	
+======similarly automate  to start the instance==												
+create role->AWS service->lambda->nextpermission->attach the above created policy(ec2-stop/start)->next add tags->review->
+ Role name: EC2-start-role
+ Role description: Allows Lambda function to call EC2 sevices on your behalf
+ -> create a role
+ 
+Goto lambda->Author from scrach->
+				function name:start-ec2-instance
+				runtime: python 3.7
+				execution role: select use an exixting role(ec2 start role)-> creater function
+	fucntion code-> add the below code
+#Start the instances:-
+import boto3
+region = 'us-west-1'
+instances = ['i-12345cb6de4f78g9h', 'i-08ce9b2d7eccf6d26']
+ec2 = boto3.client('ec2', region_name=region)
+
+def lambda_handler(event, context):
+    ec2.start_instances(InstanceIds=instances)
+    print('started your instances: ' + str(instances))			
+				
+				->save  ->test ->
+						event name: testevent
+									->create
+and then click on test ->it should be suceeded it will start the instance.
+
+to automate the events we use the cloudwatch->
+Goto Cloudwatch->Events->rules-> create rules->
+						select schedule
+						cron expression: 22 20 29 6 ? *  this is based on gmt time zone
+						everyyear 29th june 8:22 pm          			
+						
+						Target->add target->select the function -> configure details->
+													name:ec2-start
+													description:starting the instance
+													->create rule
+													
+			now it will trigger and start the ec2 instance.									
+								
+						
+  
