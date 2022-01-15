@@ -1,6 +1,7 @@
 
 https://youtu.be/jkn459MBNpo
 https://gist.github.com/nixjobin/2f860ba9a4a5022eaff7d1799224cecb
+ref: https://aws.amazon.com/premiumsupport/knowledge-center/start-stop-lambda-eventbridge/
 
 1.create IAM policie
 use visual editor (not json)
