@@ -1,0 +1,112 @@
+
+https://youtu.be/jkn459MBNpo
+https://gist.github.com/nixjobin/2f860ba9a4a5022eaff7d1799224cecb
+
+1.create IAM policie
+use visual editor (not json)
+	service: select EC2 
+	Actoins: (write )specify the actions allowed in ec2
+		 select start and 
+		 select stop
+  	Resources:  select all resources
+  	 select add additonal permisssions
+  	service: cloudwatch logs
+	Actions: select all cloudwatch logs
+	Resources: select all resources
+ review policy
+ 	Name:ec2-start-stop-policy
+ 	description: the policy for start and stop the instances
+ 	click on create policy
+ 	
+ once we create the policy we can see it under (filter)custom managed policy
+ 
+2.create IAM role with that policie so that the lambda fuction can acess this policy through the role 
+ create role->AWS services -> select lambda service -> next permissions 
+ 								select the policy which is created (ec2-start-stop-policy)->next tags 
+ ->next review
+            Role Name: lambda-ec2-start-stop-role -> click on create a role
+            
+     now we have created the policy and the role so that lamda can acess this policy through the role
+                              
+3.create a lambda function use an existing role
+create function-> select author from scratch->
+						function name: ec2-stop-instance
+						runtime; node.js 12x
+						choose an existing role
+						existing role: lambda-ec2-start-stop-role
+						 					-> cick on create function
+		once the function is created add the below code in the index.js file
+		   
+const AWS = require('aws-sdk');
+
+exports.handler = (event, context, callback) => {
+    const ec2 = new AWS.EC2({ region: event.instanceRegion });
+    
+    ec2.stopInstances({ InstanceIds: [event.instanceId] }).promise()
+        .then(() => callback(null, `Successfully stopped ${event.instanceId}`))
+        .catch(err => callback(err));
+};
+
+-> click on save  -> click on test 
+				create new test event
+				event template:hello-world
+				event name: instanceIDs
+				{
+				  "instanceRegion": "us-east-1",   select the region and instance ids
+				  "instanceID": "i-0654ed2g35tdb5"
+				}
+				
+				 -> click on create
+				 
+	then click on test then the fuction is executed  (i.e, the fuction will stop the running instance)
+    ==in similar way create a fucntion for start the instance==
+    
+ create function-> select author from scratch->
+						function name: ec2-start-instance
+						runtime; node.js 12x
+						choose an existing role
+						existing role: lambda-ec2-start-stop-role
+						 					-> cick on create function
+		once the function is created add the below code in the index.js file   
+const AWS = require('aws-sdk');
+
+exports.handler = (event, context, callback) => {
+    const ec2 = new AWS.EC2({ region: event.instanceRegion });
+    
+    ec2.startInstances({ InstanceIds: [event.instanceId] }).promise()
+        .then(() => callback(null, `Successfully started ${event.instanceId}`))
+        .catch(err => callback(err));
+};
+
+-> click on save  -> click on test 
+				create new test event
+				event template:hello-world
+				event name: instanceIDs
+				{
+				  "instanceRegion": "us-east-1",   select the region and instance ids
+				  "instanceID": "i-0654ed2g35tdb5"
+				}
+				
+				 -> click on create
+				 
+	then click on test then the fuction is executed  (i.e, the fuction will start the instance)		
+    
+ now we need to automate these two lamd functions by using the cloudwatch
+ 
+ 4.setup cloudwatch rule
+ Goto Events->
+ 	    rules->create rule ->
+ 	    			select schedule
+ 	    			select cron expression: 35 19 * * ? *  (specify the cron expression)
+ 	    			
+Targets->add target->lambdafunction->
+					function: ec2-stop/start-instance
+					configure input
+						select constant (json text): { "instanceRegion": "us-east-1", "instanceid": "i-0654ed2g35tdb5" }
+						then click on configure details->Rule definition
+												name: ec2-stop-instane ->click on create rule
+												
+						
+						
+ 	    			
+ 	    		 
