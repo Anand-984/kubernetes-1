@@ -9,6 +9,9 @@
 🔔️ref    https://aws.amazon.com/premiumsupport/knowledge-center/users-connect-rds-iam/
 🔔️ref   video:   https://youtu.be/o4Sf5Z6E2lk
 
+✍️How do I create another master user for my Amazon RDS DB instance that is running MySQL?
+🔔️ref  https://aws.amazon.com/premiumsupport/knowledge-center/duplicate-master-user-mysql/
+
 ✍️How to create MySQL user and grant permissions in AWS RDS?  👁️ the below procedure is the is the solution
 🔔️ ref   https://www.cyberciti.biz/faq/how-to-create-mysql-user-and-grant-permissions-in-aws-rds/
 
