@@ -1,0 +1,76 @@
+✍️Connecting to a DB instance running the MySQL database engine?
+🔔️https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ConnectToInstance.html
+
+📌️mysql -h mysql–instance1.123456789012.us-east-1.rds.amazonaws.com -P 3306 -u mymasteruser -p
+📌️mysql -h <rds-endpoint> -p 3306 -u admin -p
+
+
+✍️How do I allow users to authenticate to an Amazon RDS MySQL DB instance using their IAM credentials?
+🔔️ref    https://aws.amazon.com/premiumsupport/knowledge-center/users-connect-rds-iam/
+🔔️ref   video:   https://youtu.be/o4Sf5Z6E2lk
+
+✍️How to create MySQL user and grant permissions in AWS RDS?  👁️ the below procedure is the is the solution
+🔔️ ref   https://www.cyberciti.biz/faq/how-to-create-mysql-user-and-grant-permissions-in-aws-rds/
+
+=======to login in to the mysql server======
+mysql -h <endpoint of rds> -p 3306 -u <username> -p         after entering this command enter the password of the user
+
+📌️mysql -h database-2.ctd1wjjyixk3.us-east-1.rds.amazonaws.com -P 3306 -u admin -p        ✋️    cntrl+;  😂️
+
+
+
+Step 1: Create a new database
+📌️mysql>CREATE DATABASE test;
+
+
+Step 2: Create a new MySQL user account on AWS RDS
+📌️mysql>CREATE USER 'anand'@'localhost' IDENTIFIED BY '123456789';   or
+📌️mysql>CREATE USER 'anand'@'%' IDENTIFIED BY '123456789';           or
+## EC2/Lightsail server IP address/client ##
+📌️mysql> CREATE USER 'vivek'@'172.26.9.11' IDENTIFIED BY 'password';
+## VPC sub/net client example for 172.26.0.0/20 ##
+📌️mysql> CREATE USER 'vivek'@'172.26.0.0/255.255.240.0' IDENTIFIED BY 'passwd';
+
+Step 3: Grant privileges to a MySQL user account
+For example:
+mysql> GRANT SELECT, INSERT, UPDATE, DELETE ON 'test'.* TO 'vivek'@'%';
+mysql> GRANT CREATE, DROP, INDEX, ALTER, CREATE TEMPORARY TABLES, CREATE VIEW, EVENT, TRIGGER, SHOW VIEW, CREATE ROUTINE, ALTER ROUTINE, EXECUTE ON `test`.* TO 'vivek'@'%';
+mysql> GRANT ALL PRIVILEGES ON `test`.* TO 'vivek'@'%';
+
+ GRANT <type_of_permission> ON <databasename>.<table-name> TO '<username>'@'localhost';
+📌️mysql>GRANT ALL PRIVILEGES ON `test` . * TO 'anand'@'localhost';     or     
+📌️mysql>GRANT ALL PRIVILEGES ON `test` . * TO 'anand'@'%';
+
+📌️mysql>SHOW GRANTS for anand;   or
+📌️mysql>SHOW GRANTS for 'sai'@'%';
+📌️mysql> FLUSH PRIVILEGES;
+📌️📌️mysql> quit;
+
+Step 4: Test it
+📌️ root@172.21.32.41:~# mysql -u anand -h <rds-endpoint> -P 3306 -p <databasename>
+123456789
+📌️ root@172.21.32.41:~# mysql -u anand -h mysql–instance1.134342.us-west-1.rds.amazonaws.com -P 3306 -p test
+
+Step 5: Revoke privileges from a AWS RDS MySQL user account
+📌️mysql> REVOKE ALL PRIVILEGE1,PRIVILEGE2 ON database.* FROM 'user'@'client_ip';
+📌️mysql> REVOKE INSERT, DELETE ON `test`.* FROM 'anand'@'%';
+📌️ mysql> REVOKE ALL PRIVILEGES ON `salesstats`.* FROM 'sai'@'%'; 
+📌️mysql> FLUSH PRIVILEGES;
+
+Step 6: Delete AWS RDS MySQL user account
+📌️mysql> DROP USER 'anand'@'client_ip';
+📌️mysql> DROP USER 'anand'@'%';
+
+Step 7: Remove an existing AWS RDS MySQL database
+📌️mysql> DROP DATABASE db_name_here;
+📌️mysql> DROP DATABASE test; 
+
+Verify it:
+📌️mysql> SHOW DATABASES; 
+
+
+
+
+
+
+
