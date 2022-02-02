@@ -1,0 +1,93 @@
+         ======python code to dynamodb_scaling.register_scalable_target=============
+http://blog.zenof.ai/programmatically-updating-autoscaling-policy-on-dynamodb-with-boto3-application-auto-scaling/
+
+https://docs.aws.amazon.com/autoscaling/application/userguide/examples-scheduled-actions.html
+
+
+1.create one dynamodb table  auto scaling off.
+2.create a role to by attaching the dynamodb full acess policy.
+3.create a lambda function and use the fallowing python code to scale up the provisioned capacity of Writes/Reads.
+4.create a cloud watch event to trigger the lambda funtion.
+
+
+import os
+import sys
+import boto3
+from botocore.exceptions import ClientError
+
+sys.path.append('./lib/python3.7/site-packages')
+
+dynamodb = boto3.resource('dynamodb')
+dynamodb_scaling = boto3.client('application-autoscaling')
+
+table_name = "dbscale"
+table = dynamodb.Table(table_name)
+def lambda_handler(event, context):
+ dynamodb_scaling.register_scalable_target(ServiceNamespace = "dynamodb", 
+                                               ResourceId = "table/{}".format(table_name),
+                                               ScalableDimension = "dynamodb:table:ReadCapacityUnits",
+                                               MinCapacity = 5, MaxCapacity = 20,
+                                               RoleARN = 'arn:aws:iam::581865209568:role/dbscale')
+                                               
+ dynamodb_scaling.register_scalable_target(ServiceNamespace = "dynamodb",
+                                               ResourceId = "table/{}".format(table_name),
+                                               ScalableDimension = "dynamodb:table:WriteCapacityUnits",
+                                               MinCapacity = 5, MaxCapacity = 20,
+                                               RoleARN = 'arn:aws:iam::581865209568:role/dbscale')
+
+ dynamodb_scaling.put_scheduled_action(ServiceNamespace = "dynamodb",
+                                               ResourceId = "table/{}".format(table_name),
+                                               ScalableDimension = "dynamodb:table:ReadCapacityUnits",
+                                               Timezone = 'Asia/Kolkata',
+                                               Schedule = "rate(1, hours)",
+                                               StartTime = datetime(2022, 1, 29, 20, 30),
+                                               EndTime = datetime(2022, 1, 29, 21 , 0),
+                                               #Schedule = "cron(* * * * * *)",
+                                               ScalableTargetAction = {'MinCapacity': 5, 'MaxCapacity' : 20})
+
+ dynamodb_scaling.put_scheduled_action(ServiceNamespace = "dynamodb",
+                                               ResourceId = "table/{}".format(table_name),
+                                               ScalableDimension = "dynamodb:table:WriteCapacityUnits",
+                                               Timezone = 'Asia/Kolkata',
+                                               Schedule = "rate(1, hours)",
+                                               StartTime = datetime(2022, 1, 29, 20, 30),
+                                               EndTime = datetime(2022, 1, 29, 21, 0),
+                                               #Schedule = "cron(* * * * * *)",
+                                               ScalableTargetAction = {'MinCapacity': 5, 'MaxCapacity' : 20})
+                                               
+                                               
+                                               
+                                               
+                                               
+                                               
+                                               
+
+import os
+import sys
+import boto3
+from botocore.exceptions import ClientError
+
+sys.path.append('./lib/python3.7/site-packages')
+
+dynamodb = boto3.resource('dynamodb')
+dynamodb_scaling = boto3.client('application-autoscaling')
+
+table_name = "dbscale"
+table = dynamodb.Table(table_name)
+def lambda_handler(event, context):
+ dynamodb_scaling.register_scalable_target(ServiceNamespace = "dynamodb", 
+                                               ResourceId = "table/{}".format(table_name),
+                                               ScalableDimension = "dynamodb:table:ReadCapacityUnits",
+                                               MinCapacity = 15, MaxCapacity = 20)
+                                               #RoleARN = 'arn:aws:iam::581865209568:role/dbscale')
+
+ dynamodb_scaling.put_scheduled_action(ServiceNamespace = "dynamodb",
+                                               ResourceId = "table/{}".format(table_name),
+                                               ScalableDimension = "dynamodb:table:ReadCapacityUnits",
+                                               #Timezone = 'Asia/Kolkata',
+                                               Schedule = "at(2022-01-31T11:40:00)",
+                                               ScalableTargetAction = {'MinCapacity': 5, 'MaxCapacity': 20})
+                                               
+                                               
+                                               
+                                               
