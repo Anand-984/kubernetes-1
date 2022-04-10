@@ -1,0 +1,72 @@
+reflink:https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+
+to pull image from your docker hub private registry we need to configure dockerhub credentials to the k8s in command line
+
+root@ip-172-31-86-123:~# kubectl create secret docker-registry mydockercrd --docker-server=https://hub.docker.com/repository/docker/8884984850/sreekanth --docker-username=8884984850 --docker-password=123456789 --docker-email=sanandkumar444@gmail.com  
+
+
+root@ip-172-31-86-123:~# kubectl get secret
+
+root@ip-172-31-86-123:~# kubectl get secret mydockercrd -o yaml
+
+root@ip-172-31-86-123:~# kubectl get secret mydockercrd --output="jsonpath={.data.\.dockerconfigjson}" | base64 --decode
+{"auths":{"https://hub.docker.com/repository/docker/8884984850/sreekanth":{"username":"8884984850","password":"123456789","email":"sanandkumar444@gmail.com","auth":"ODg4NDk4NDg1MDoxMjM0NTY3ODk="}}}
+
+root@ip-172-31-86-123:~# echo "ODg4NDk4NDg1MDoxMjM0NTY3ODk=" | base64 --decode
+
+root@ip-172-31-86-123:~# kubectl create secret generic dockercrd --from-file=.dockerconfigjson=/root/.docker/config.json --type=kubernetes.io/dockerconfigjson
+
+create a pod definition file with your private dockerhub image and also configure the created dockerhub credentilas in the definition file
+root@ip-172-31-86-123:~# vim sree.yaml 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sree
+  labels:
+    app: pavan  
+spec:
+  containers:
+  - name: sree        
+    image: 8884984850/sreekanth:1.0.0
+  imagePullSecrets:
+  - name: dockercrd
+root@ip-172-31-86-123:~# kubectl apply -f sree.yaml 
+pod/sree configured
+
+create a service file to access the application which is running in the pod
+root@ip-172-31-86-123:~# kubectl create service nodeport sree-sc --tcp=5678:8080
+root@ip-172-31-86-123:~# kubectl get svc sree-sc -o yaml
+root@ip-172-31-86-123:~# kubectl get svc sree-sc -o yaml>svc.yaml
+root@ip-172-31-86-123:~# vim svc.yaml 
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: pavan
+  name: sree-sc
+  namespace: default
+spec:
+  ports:
+  - name: 5678-8080
+    nodePort: 30751
+    port: 5678
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: pavan
+  sessionAffinity: None
+  type: NodePort
+~               
+root@ip-172-31-86-123:~# kubectl apply -f svc.yaml 
+root@ip-172-31-86-123:~# kubectl get all -o wide
+NAME                 TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE     SELECTOR
+service/sree-sc      NodePort    10.96.223.80   <none>        5678:30751/TCP   4m38s   app=pavan
+    
+    
+    makesure that the TYPE of the service should be NodePort
+    
+ now take the ip of the worker node where the pod is running and browse it in the browser
+ ex:http://3.95.21.162:30751/login/
+
+
+
