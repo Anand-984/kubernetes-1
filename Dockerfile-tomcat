@@ -3,12 +3,11 @@ WORKDIR /opt
 ADD https://dlcdn.apache.org/tomcat/tomcat-8/v8.5.78/bin/apache-tomcat-8.5.78.zip /opt/
 RUN apt update -y
 RUN apt install unzip -y
-RUN mv apache-tomcat-8.5.78.zip tomcat.zip
-RUN unzip /opt/tomcat.zip
-WORKDIR /opt/tomcat/bin
+RUN unzip /opt/apache-tomcat-8.5.78.zip 
+WORKDIR /opt/apache-tomcat-8.5.78/bin
 RUN apt update -y
 RUN apt install openjdk-8-jre -y
-RUN chmod 777 /opt/tomcat/bin/
+RUN chmod 777 /opt/apache-tomcat-8.5.78/bin/*
 EXPOSE 8080
-CMD ["/opt/tomcat/bin/catalina.sh","run"]
+CMD ["/opt/apache-tomcat-8.5.78/bin/catalina.sh", "run"]
 
