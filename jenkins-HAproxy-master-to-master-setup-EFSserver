@@ -1,4 +1,4 @@
-1.Launch two VMs for jenkins master servers and one VM  for HA proxy to route traffic to the master servers.After creating the NFS server and mounting it to the jenkins master servers the only install jenkins on the master servers.
+1.Launch two VMs for jenkins master servers and one VM  for HA proxy to route traffic to the master servers.
    we need to do master to master setup
    
    ssh into the two servers andinstall the jenkins in both the master servers
