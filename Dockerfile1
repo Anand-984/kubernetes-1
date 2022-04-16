@@ -1,0 +1,12 @@
+FROM ubuntu
+RUN mkdir /opt/tomcat
+WORKDIR /opt/tomcat
+COPY ./apache* /opt/tomcat
+RUN tar -xvzf apache*.tar.gz
+RUN  mv apache-tomcat-8.5.78/* /opt/tomcat/.
+RUN apt update -y
+RUN apt install openjdk-8-jdk -y
+copy ./login.war  /opt/tomcat/webapps
+WORKDIR /opt/tomcat/webapps
+EXPOSE 8080
+CMD [ "/opt/tomcat/bin/catalina.sh", "run"]
