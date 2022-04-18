@@ -1,0 +1,85 @@
+----------------jenkins master to master setup HAproxy EFS -------
+📢️launch three vms,two for jenkins masters and one for HAproxy
+📢️install jenkins on both the vms
+📢️login to the both the dash boards
+📢️gernerate the ssh-keygen on both the vms copy the private keys and enter in jenkins dashboards of respective servers
+📢️goto dashboard->manage jenkins->manage credentials->global->add credentials->ssh username with privatekey
+ID :jeankinsHA   ----the ID should be same in both the servers
+username: root 
+Enter Directly:enter the copied private keys  
+📢️do the above procedure on each server1&2
+
+-----now setup the nfs server on aws---
+📢️go to aws create nfs server  and select the created nfs server ->click on Network access->manage->select the vpc where you launched jenkins servers ->select the Availability zone where you launched jenkins servers->👀️makesure to select the SG which is attached to the jenkis vms->save
+
+----on both the master servers---
+👉️yum install nfs-utils -y    📢️we nees to install the nfs client
+👉️df -h 
+👉️sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport fs-0a4b3463d6b83be47.efs.us-east-1.amazonaws.com:/ /var/lib/jenkins/jobs      📢️makesure to mount the nfs server to the path /var/lib/jenkins/jobs 
+👉️systemctl start nfs-server
+👉️systemctl stop jenkins
+👉️systemctl start jenkins
+👉️df -h     📢️the nfs server get mounted to the /var/lib/jenkins/jobs directory   
+👉️cd /var/lib/jenkins
+👉️chown -R jenkins:jenkins /var/lib/jenkins/jobs    📢️give the ownership to the jenkins user
+👉️systemctl start jenkins
+
+
+📢️now if you run any jobs in the server1 that get reflected in the server2 terminal but you cant find those jobs in the dashboard.to get reflect those we need to restart the server2
+📢️by using API calls we can reload the jenkins,by using CRUMB request
+[https://support.cloudbees.com/hc/en-us/articles/219257077-CSRF-Protection-Explained]
+
+---------------------{{{{{
+curl -u "admin:admin" 'http://35.168.11.234:8080/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,":",//crumb)'
+# Replace with your Jenkins URL and admin credentials
+SERVER="http://35.168.11.234:8080"
+# File where web session cookie is saved
+COOKIEJAR="$(mktemp)"
+CRUMB=$(curl -u "admin:admin" --cookie-jar "$COOKIEJAR" "$SERVER/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,%22:%22,//crumb)")
+curl -X POST -u "admin:admin" --cookie "$COOKIEJAR" -H "$CRUMB" "$SERVER/reload"
+
+
+1.->curl -u "admin:admin" 'http://35.168.11.234:8080/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,":",//crumb)'
+
+you will get like ----->Jenkins-Crumb:2f6eec43c7cfb89cacc89d633fa480ab0769ea24ba663a8dc4be72983a73ca78
+
+2.->mktemp
+you will get ---> /tmp/tmp.9QGA7L1d9n
+
+3.->curl -u "admin:admin" --cookie-jar "/tmp/tmp.9QGA7L1d9n" "http://35.168.11.234:8080/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,%22:%22,//crumb)"
+
+you will get ---->Jenkins-Crumb:0bf500d1c501a75bca886f96c8979fabf8756d0bcf4ee66c02724be542c76f67
+
+4.->curl -X POST -u "admin:admin" --cookie "/tmp/tmp.9QGA7L1d9n" -H "Jenkins-Crumb:0bf500d1c501a75bca886f96c8979fabf8756d0bcf4ee66c02724be542c76f67" "http://35.168.11.234:8080/reload"
+
+5.now goto dash board -> manage jenkins->global security->CSRF potection(Cross Site Request Forgery )->✔️enable proxy compatability
+
+now you dont get any error here
+}}}}--------------
+
+--------------on server2-------------
+
+👉️cd /opt
+👉️vim reload.sh     📢️ enter the below script
+
+!#/bin/bash
+export SERVER="http://35.168.11.234:8080"     {🔊️replace ips with your jenkins master server2 ip}
+# File where web session cookie is saved
+export COOKIEJAR="$(mktemp)"
+export CRUMB=$(curl -u "admin:admin" --cookie-jar "$COOKIEJAR" "$SERVER/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,%22:%22,//crumb)")
+curl -X POST -u "admin:admin" --cookie "$COOKIEJAR" -H "$CRUMB" "$SERVER/reload"
+
+👉️chmod +x /opt/reload.sh    📢️give the executable permissions to the script
+🏃‍♂️️ to schedule a cron goto /etc/cron.d
+👉️cd /etc/cron.d
+👉️vim jenkinsreload     📢️give any name 'here we are reloading the jenkins server through script using cron' 📢️ enter the below script
+*/1 * * * *  root /bin/bash /opt/reload.sh 
+
+📢️the above expression states that run the reload.sh script as a root user at every minute 
+📢️makesure to give the absolute path where the script present
+👉️systemctl status crond
+goto dash board -> manage jenkins->global security->CSRF potection(Cross Site Request Forgery )->✔️enable proxy compatability
+
+📢️now if you run any job in the server1 that gets reflected in the server2 terminal as well as in the dash board by every minute 
+
+similarly to reflect the jobs which runs in the server2 to the server1 dash board do the above procedure in server1 aswell USING CRUMB REQUEST 
