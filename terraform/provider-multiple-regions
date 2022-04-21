@@ -16,7 +16,7 @@ provider "aws" {
 
 provider "aws" {
         alias = "ap"
-        region = "ap-soth-1"
+        region = "ap-south-1"
         access_key = "AKIAjkkTAYPIQCTH7GJGG"
         secret_key = "xxxxxxxxxxxxxxxxx"
 }
