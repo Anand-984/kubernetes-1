@@ -1,0 +1,12 @@
+		steps involved in creating the vpc and subnets
+  1.Decide VPC name and create a new VPC .here the vpc name is AWS-JAN-21-vpc and ip address renge is 10.1.0.0/16 =>65000 ips.and enable DNS Hostname.(vpc is with in the region )
+  2.create three subnets in AWS-JAN-21-vpc enable automatic public IP Assignment
+      JAN-21-subnet1 ==> 10.1.1.0/24 -1a
+      JAN-21-subnet2 ==> 10.1.2.0/24 -1b
+      JAN-21-subnet3 ==> 10.1.3.0/24 -1a
+  3.create an internet gateway and attach it to the vpc. IGW name is AWS-IGW-JAN-21.
+  4.create new routing table for AWS-JAN-21 and associate subnets to it . ignore the default routing table.
+  5.add routes in the routing table towards internet gateway.
+  6.create a security group infy-vpc-SG and allow all inbound ports.
+  7.create a key-pair which create public and private keys .AWS will have public key and you will be given the private key.we need to use the private key to login to the instance.
+  8.Deploy a linux t2.micro instance and connect to it using private key.
