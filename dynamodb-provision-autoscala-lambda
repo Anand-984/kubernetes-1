@@ -1,0 +1,96 @@
+
+user name: user1
+
+TOyMqoNLT5jg1OVKWV0tQ1eIrv+ZD8MwzDY/zLlR      secretkey
+AKIAYO6O6P3QAC5O4T7E      access key
+
+
+
+aws application-autoscaling register-scalable-target \
+  --service-namespace dynamodb \
+  --scalable-dimension dynamodb:table:ReadCapacityUnits \
+  --resource-id table/dbscale \
+  --min-capacity 15 --max-capacity 20
+  
+  
+  aws application-autoscaling register-scalable-target \
+  --service-namespace dynamodb \
+  --scalable-dimension dynamodb:table:WriteCapacityUnits \
+  --resource-id table/dbscale \
+  --min-capacity 15 --max-capacity 20
+  
+  aws application-autoscaling put-scheduled-action \
+  --service-namespace dynamodb \
+  --scalable-dimension dynamodb:table:ReadCapacityUnits \
+  --resource-id table/dbscale \
+  --scheduled-action-name my-first-scheduled-action \
+  --schedule "at(2022-01-30T15:15:00)" \
+  --scalable-target-action MinCapacity=1,MaxCapacity=6
+  
+  aws application-autoscaling put-scheduled-action \
+  --service-namespace dynamodb \
+  --scalable-dimension dynamodb:table:WriteCapacityUnits \
+  --resource-id table/dbscale \
+  --scheduled-action-name my-first-scheduled-action \
+  --schedule "at(2022-01-30T16:01:00)" \
+  --scalable-target-action MinCapacity=10,MaxCapacity=10
+  
+    aws application-autoscaling put-scheduled-action \
+  --service-namespace dynamodb \
+  --scalable-dimension dynamodb:table:ReadCapacityUnits \
+  --resource-id table/dbscale \
+  --scheduled-action-name my-first-scheduled-action \
+  --schedule "at(2022-01-30T20:00)" \
+  --scalable-target-action MinCapacity=15,MaxCapacity=20
+  
+  aws application-autoscaling register-scalable-target --service-namespace dynamodb \
+  --scalable-dimension dynamodb:table:ReadCapacityUnits --resource-id table/dbscale \
+  --suspended-state file://config.json
+  
+  aws application-autoscaling describe-scheduled-actions \
+  --service-namespace dynamodb
+  
+aws application-autoscaling describe-scalable-targets \
+  --service-namespace dynamodb
+  
+  aws application-autoscaling put-scheduled-action --service-namespace dynamodb \
+  --scalable-dimension dynamodb:table:ReadCapacityUnits \
+  --resource-id table/dbscale \
+  --scheduled-action-name Scaling-upto-20 \
+  --schedule "rate(10 minutes)" \
+  --start-time 2022-01-30T10:20:00 \
+  --end-time 2022-01-30T10:30:00 \
+  --scalable-target-action MinCapacity=15,MaxCapacity=20
+  
+aws application-autoscaling put-scheduled-action --service-namespace dynamodb \
+  --scalable-dimension dynamodb:table:ReadCapacityUnits \
+  --resource-id table/dbscale \
+  --scheduled-action-name Scaling-upto-20 \
+  --schedule "cron(* 11 * * ? *)" \
+  --scalable-target-action MinCapacity=15,MaxCapacity=20
+  
+  aws application-autoscaling put-scheduled-action --service-namespace dynamodb \
+  --scalable-dimension dynamodb:table:ReadCapacityUnits \
+  --resource-id table/dbscale \
+  --scheduled-action-name Scaling-upto-20 \
+  --schedule "cron(10 11 * * ? *)" \
+  --scalable-target-action MinCapacity=15,MaxCapacity=20
+  
+  aws application-autoscaling delete-scheduled-action \
+  --service-namespace dynamodb \
+  --scalable-dimension dynamodb:table:ReadCapacityUnits \
+  --resource-id table/dbscale \
+  --scheduled-action-name my-first-scheduled-action
+  
+    aws application-autoscaling delete-scheduled-action \
+  --service-namespace dynamodb \
+  --scalable-dimension dynamodb:table:WriteCapacityUnits \
+  --resource-id table/dbscale \
+  --scheduled-action-name my-first-scheduled-action
+  
+  aws application-autoscaling deregister-scalable-target \
+  --service-namespace dynamodb \
+  --scalable-dimension dynamodb:table:ReadCapacityUnits \
+  --resource-id table/dbscale
+
+  
