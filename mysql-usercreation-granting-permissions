@@ -1,0 +1,28 @@
+https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ConnectToInstance.html
+
+=======to login in to the mysql server======
+mysql -h <endpoint of rds> -p 3306 -u <username> -p         after entering this command enter the password of the user
+
+mysql -h database-2.ctd1wjjyixk3.us-east-1.rds.amazonaws.com -P 3306 -u admin -p
+
+
+=====create user and grant permissions to that user======
+
+https://docs.rackspace.com/support/how-to/create-and-edit-users-in-mysql/
+
+CREATE USER 'test'@'localhost' IDENTIFIED BY 'newpassword';
+CREATE USER 'anand'@'localhost' IDENTIFIED BY '123456789';
+FLUSH PRIVILEGES;
+
+GRANT SELECT ON * . * TO 'test'@'localhost';          GRANT <type_of_permission> ON <databasename>.<table-name> TO '<username>'@'localhost';
+GRANT SELECT ON * . * TO 'anand'@'localhost';
+FLUSH PRIVILEGES;
+
+Create a new database and allow test to have full access to it so that they can create, read, update, and delete records, as shown in the following example:
+CREATE DATABASE mytestdb;        ->Now we have the database and the user, we can assign the privileges
+GRANT ALL PRIVILEGES ON `mytestdb` . * TO 'test'@'localhost';
+GRANT ALL PRIVILEGES ON `mytestdb` . * TO 'anand'@'localhost';
+FLUSH PRIVILEGES;
+
+revoke select on *.* from 'anand'@'localhost';
+REVOKE ALL PRIVILEGES ON `mytestdb`.* TO `anand`@`localhost`;
