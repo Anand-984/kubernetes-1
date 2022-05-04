@@ -1,0 +1,129 @@
+volumes are of two types in aws
+1.EBS volumes   
+
+👉️.EBS volumes are persistent ,i.e the volume remain persistent even if the system is reset if configure the fstab entry /etc/fstab
+👉️.the EBS volumes should be created in the same region where the instance is running otherwise you cant attach this volume to the instance.
+
+2.Instgance store(IS) volume
+👉️.the Instance store volume come along with the instance hardware.
+👉️. the instance store volumes are not persistent , the volume does not exists if the system got reset.
+
+📢️ https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-using-volumes.html  ====important
+Extend a Linux file system after resizing a volume: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/recognize-expanded-volume-linux.html
+how  to use EBS volumes 
+👉️lunch one ec2 instance
+👉️[root@ip-172-31-4-18 ~]# lsblk      👉️ here you find the list of blocks
+xvda    202:0    0  10G  0 disk 
+├─xvda1 202:1    0   1M  0 part 
+└─xvda2 202:2    0  10G  0 part /
+[root@ip-172-31-4-18 ~]# df -hT        👉️ here you find the blocks which are mounted to the which directory(/)
+/dev/xvda2     xfs        10G  2.7G  7.4G  27% /
+👉️now go to the ec2 dash board under the volume section create the volume in the same region where the instance is running. 
+👉️once the volume comes to available state then attach that volume to the instance.
+[root@ip-172-31-4-18 ~]# lsblk 
+NAME    MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+xvda    202:0    0  10G  0 disk 
+├─xvda1 202:1    0   1M  0 part 
+└─xvda2 202:2    0  10G  0 part /
+xvdf    202:80   0  15G  0 disk       👉️here you find the newly attached volume but it is not mounted to any directory.this is the raw volume so we need to formate the disk first.
+👉️New volumes are raw block devices, and you must create a file system on them before you can mount and use them.  
+📢️NOTE: if you are attaching the already existing EBS volume which is containing some data then DONT FORMATE THE DISK 
+ 
+[root@ip-172-31-4-18 ~]# df -hT
+Filesystem     Type      Size  Used Avail Use% Mounted on
+devtmpfs       devtmpfs  370M     0  370M   0% /dev
+tmpfs          tmpfs     404M     0  404M   0% /dev/shm
+tmpfs          tmpfs     404M   11M  393M   3% /run
+tmpfs          tmpfs     404M     0  404M   0% /sys/fs/cgroup
+/dev/xvda2     xfs        10G  2.7G  7.4G  27% /
+tmpfs          tmpfs      81M     0   81M   0% /run/user/1000
+
+[root@ip-172-31-4-18 ~]# sudo file -s /dev/xvdf
+/dev/xvdf: data 
+
+If the output shows simply "data" ,then there is no file system on the device
+
+[root@ip-172-31-4-18 ~]# sudo file -s /dev/xvda2
+/dev/xvda2: SGI XFS filesystem data (blksz 4096, inosz 512, v2 dirs)
+
+👉️the above  output shows a root device with the XFS file system.that means it has a file system ,it mean that some data is present.
+👉️the below command to get information about all of the devices attached to the instance.
+[root@ip-172-31-4-18 ~]# sudo lsblk -f
+NAME    FSTYPE LABEL UUID                                 MOUNTPOINT
+xvda                                                      
+├─xvda1                                                   
+└─xvda2 xfs          c9aa25ee-e65c-4818-9b2f-fa411d89f585 /
+xvdf     
+
+👉️If the output from these commands show that there is no file system on the device, you must create one.
+
+[root@ip-172-31-4-18 ~]# sudo mkfs -t ext4 /dev/xvdf (or) sudo mkfs -t xfs /dev/xvdf
+[root@ip-172-31-4-18 ~]# sudo mkdir /anand 👉️Use the mkdir command to create a mount point directory for the volume.
+[root@ip-172-31-4-18 ~]# sudo mount /dev/xvdf /anand
+[root@ip-172-31-4-18 ~]# lsblk
+NAME    MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
+xvda    202:0    0  10G  0 disk 
+├─xvda1 202:1    0   1M  0 part 
+└─xvda2 202:2    0  10G  0 part /
+xvdf    202:80   0  15G  0 disk /anand     👉️now it is mounted to the directory /anand
+👉️Review the file permissions of your new volume mount to make sure that your users and applications can write to the volume.
+[root@ip-172-31-4-18 ~]# df -hT
+/dev/xvdf      ext4       15G   41M   14G   1% /anand
+
+👉️The mount point is not automatically preserved after rebooting your instance. To automatically mount this EBS volume after reboot Create a backup of your /etc/fstab file that you can use if you accidentally destroy or delete this file while editing it.
+👉️Use the "blkid" command to find the UUID of the device. Make a note of the UUID of the device that you want to mount after reboot. You'll need it in the following steps.
+[root@ip-172-31-4-18 ~]# sudo blkid
+/dev/xvda1: PARTUUID="3e18b896-4879-4ede-8711-a58017aff81c"
+/dev/xvda2: UUID="c9aa25ee-e65c-4818-9b2f-fa411d89f585" BLOCK_SIZE="512" TYPE="xfs" PARTUUID="b3824610-751c-49f8-a4a9-068fa13d9460"
+/dev/xvdf: UUID="c917c20c-5944-48c5-bde6-a51fbe7efe9c" BLOCK_SIZE="4096" TYPE="ext4"  ✔️
+👉️Open the /etc/fstab file using any text editor, such as nano or vim.
+[root@ip-172-31-4-18 ~]# vi /etc/fstab
+UUID=c9aa25ee-e65c-4818-9b2f-fa411d89f585 /                       xfs     defaults        0 0
+UUID=c917c20c-5944-48c5-bde6-a51fbe7efe9c /anand   ext4 defaults 0 0  ✔️
+👉️# After editing this file, run 'systemctl daemon-reload' to update systemd
+[root@ip-172-31-4-18 ~]# systemctl daemon-reload
+
+now even if you restart the system the EBS volume remain persist.
+
+
+=======to check the size of the directory====
+
+[root@ip-172-31-4-18 anand]# du -hd 1      👉️it displays the current directory usage size 
+16K	./lost+found
+40K	.
+[root@ip-172-31-4-18 ~]# du -h /anand
+16K	/anand/lost+found
+40K	/anand 
+
+[root@ip-172-31-4-18 anand]# du -had 1
+4.0K	./file3
+4.0K	./file1
+4.0K	./file4
+4.0K	./file5
+[root@ip-172-31-4-18 anand]# du -had 2
+it shows sub directorys
+[root@ip-172-31-4-18 anand]# du -had 1 | sort -rh    👉️to sort out from biggest size directory to smallest size directory
+40K	.
+16K	./lost+found
+4.0K	./file5
+4.0K	./file4
+4.0K	./file3
+[root@ip-172-31-4-18 anand]# du -had 1 ./file2  👉️to display the perticular file size in the current folder
+4.0K	./file2
+[root@ip-172-31-4-18 anand]# du -had 1 file3
+4.0K	file3
+[root@ip-172-31-4-18 anand]# du -had 1 |sort -rh | head -n 10  👉️it displays the first 10 files from biggest size
+40K	.
+16K	./lost+found
+4.0K	./file5
+4.0K	./file4
+4.0K	./file3
+4.0K	./file2
+
+
+
+
+
+
+
+
