@@ -1,0 +1,39 @@
+https://www.techrepublic.com/article/how-to-use-sftp-with-a-chroot-jail/
+
+root@ip-172-31-31-29:~# sudo apt install ssh
+root@ip-172-31-31-29:~# sudo groupadd sftponly
+root@ip-172-31-31-29:~# sudo useradd -g sftponly -s /bin/false -m -d /home/sftp sftp
+root@ip-172-31-31-29:~# sudo passwd  sftp
+root@ip-172-31-31-29:~# sudo chown root:root /home/sftp/
+root@ip-172-31-31-29:~# sudo chmod 755 /home/sftp/
+root@ip-172-31-31-29:~# mkdir /home/sftp/sftpdir
+root@ip-172-31-31-29:~# chmod 755 /home/sftp/sftpdir/
+root@ip-172-31-31-29:~# chown sftp:sftponly /home/sftp/sftpdir/
+root@ip-172-31-31-29:~# vim /etc/ssh/sshd_config    ===add the below lines at the bottom of the configuration file
+
+Port 22
+Subsystem       sftp    internal-sftp
+Match Group sftponly
+        ChrootDirectory %h
+        ForceCommand internal-sftp
+        AllowTcpForwarding no
+        X11Forwarding no
+        PasswordAuthentication yes
+
+
+root@ip-172-31-31-29:~# systemctl restart sshd
+root@ip-172-31-31-29:~# sftp sftp@localhost   ===to check the connection
+sftp@localhost's password: 
+Connected to localhost.
+sftp> 
+
+
+======to add another user====
+root@ip-172-31-31-29:~# sudo useradd -g sftponly -s /bin/false -m -d /home/anand anand
+root@ip-172-31-31-29:~# passwd anand
+root@ip-172-31-31-29:~# sudo chown root:root /home/anand/
+root@ip-172-31-31-29:~# chmod 755 /home/anand/
+root@ip-172-31-31-29:~# mkdir /home/anand/happydir
+root@ip-172-31-31-29:~# chmod 755 /home//anand/happydir/
+root@ip-172-31-31-29:~# sftp anand@localhost    ===to check the connection
+
