@@ -1,0 +1,18 @@
+
+Connect to your Windows instance
+
+👉️https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/connecting_to_windows_instance.html
+
+step1:Install an RDP client
+[Linux] Use Remmina
+👉️https://remmina.org/how-to-install-remmina/#ubuntu
+sudo apt-add-repository ppa:remmina-ppa-team/remmina-next
+sudo apt update
+sudo apt install remmina remmina-plugin-rdp remmina-plugin-secret
+
+open the Remmina by searching in the applications
+
+enter the DNSname and username as the administrator and password as the decrypted pem key.
+ 
+
+
