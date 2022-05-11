@@ -1,0 +1,136 @@
+========Amazon Redshift=========
+Amazon Redshift:(optimized postgres) it is a database belong to postgres
+		it is used in "Data warehousing" to analyse data /records to prepare reports
+	mysql-> 	OLTP-Online Transaction processing
+	Amazon Redshift ->OLAP-Online Analytics processing (by running data anakytics creating the reports)
+	
+To work with Amazon Redshift:
+first the data is load to the s3 ,the that data is taken from the s3 and load into the Aws Redshift.Then we run querys to to prepare reports.
+👉️1.create s3 bucket   (we have to upload all the data into this bucket)
+	load the data to s3: download the data file from https://docs.aws.amazon.com/redshift/latest/dg/tutorial-loading-data-download-files.html
+	these files are sample data files to practice purpose i real time we have bussiness data to load to s3.
+👉️2.create IAM user having the s3 full access   (store the accesskey and the secretkey)(AKIA3FYC6EOVJFDX7TEE       j+QnDGrgaVLNtJPmA3tFWuHWVfZ4Xr0puAHWJq3P)
+👉️3.create Redshift cluster 
+for praticing purpose select the free tier make sure to open the port no:5439 in security group what ever the security group you selected. 
+username:sree
+password:Sree1234
+publicly Accesssible:yes (make sure in realtime it is set to yes) 
+(after creating the cluster we need to download the JDBC Drivers to connect to the redshift cluster from the SQL Work bench)
+these drivers are under Amazon Redshift ->Configurations ->Connect to client tools
+                                              1.Choose connection type:JDBC
+for me JDBC 4.2(.zip) no supporting (.jar)***  2.Download drivers: select JDBC 4.2(.zip)  and download
+                                              3.Cluster connection URL:select your redshift-cluster-name  and copy jdbc URL
+                                 ****         jdbc:redshift://redshift-cluster-1.cfmnnzbsmsyh.us-east-1.redshift.amazonaws.com:5439/dev
+                                           
+👉️4.download the redshift/mysql workbench and extract it in your local machine to run the querys (to load data from s3 to redshift database)
+
+   https://www.sql-workbench.eu/downloads.html
+
+
+now open the SQL Workbench->ManageDrivers->select Amazon Redshift->load the JDBC driver (/home/ubuntu/Downloads/redshift-jdbc42-2.0.0.4.zip) ->ok
+         to test ->
+                    Driver:select Amazon Redshift
+                    URL: jdbc:redshift://redshift-cluster-1.cfmnnzbsmsyh.us-east-1.redshift.amazonaws.com:5439/dev
+                    username:sree
+                    password:Sree1234
+                    Autocommit:✔️ makesure to enable the check box
+                    
+                    click on test-> the connection is established the click on ok ->you connected to the database.
+   (makesure publicly Accesssible:yes while creatinthe cluster and in sg port 5439 should be open otherwise you cant connect)
+      now you can run querys what ever you want to perform on the database              
+                    
+👉️ select distinct(tablename) from pg_table_def where schemaname = 'public';  
+ this query is to list the tables available
+👉️ create user anand with password 'abcd123' createdb connection limit 30;
+👉️CREATE TABLE part
+(
+p_partkey 	INTEGER NOT NULL, 
+p_name 	VARCHAR(22) NOT NULL,
+p_mfgr 	VARCHAR(6), 
+p_catagory 	VARCHAR(7) NOT NULL,
+p_brand1 	VARCHAR(9) NOT NULL,
+p_color 	VARCHAR(11) NOT NULL,
+p_type 	VARCHAR(25) NOT NULL,
+p_size 	INTEGER NOT NULL,
+p_container 	VARCHAR(10) NOT NULL
+);
+
+👉️ select * from part;
+👉️ select * from part where P_color = 'blue';
+
+👉️CREATE TABLE supplier 
+(
+s_supplykey 	INTEGER NOT NULL, 
+s_name 	VARCHAR(25) NOT NULL,
+s_address 	VARCHAR(25) NOT NULL,
+s_city 	VARCHAR(10) NOT NULL,
+s_nation 	VARCHAR(15) NOT NULL,
+s_region 	VARCHAR(10) NOT NULL,
+s_phone 	VARCHAR(15) NOT NULL
+);
+
+
+👉️CREATE TABLE customer
+(
+c_cuskey 	INTEGER NOT NULL,
+c_name 	VARCHAR(25) NOT NULL,
+c_address 	VARCHAR(25) NOT NULL,
+c_city 	VARCHAR(25) NOT NULL,
+c_nation 	VARCHAR(25) NOT NULL,
+c_region 	VARCHAR(20) NOT NULL,
+c_phone 	VARCHAR(15) NOT NULL,
+c_mktsegment 	VARCHAR(10) NOT NULL 
+);
+
+👉️CREATE TABLE dwdate
+(
+d_datekey 		INTEGER NOT NULL,
+d_date 		VARCHAR(19) NOT NULL,
+d_dayofweek 		VARCHAR(10) NOT NULL,
+d_month 		VARCHAR(10) NOT NULL,
+d_year 		INTEGER NOT NULL,
+d_yearmonthnum 	INTEGER NOT NULL,
+d_yearmonth 		VARCHAR(8) NOT NULL,
+d_daynuminweek 	INTEGER NOT NULL,
+d_daynuminmonth 	INTEGER NOT NULL,
+d_daynuminyear 	INTEGER NOT NULL,
+d_monthnuminyear 	INTEGER NOT NULL,
+d_weeknuminyear 	INTEGER NOT NULL,
+d_sellingseason 	VARCHAR(13) NOT NULL,
+d_lastdayinweekfl 	VARCHAR(1) NOT NULL,
+d_ladtdayinmonthfl 	VARCHAR(1) NOT NULL,
+d_holidayfl 		VARCHAR(1) NOT NULL,
+d_weekdayfl 		VARCHAR(1) NOT NULL
+);
+
+👉️CREATE TABLE lineorder
+(
+lo_orderkey 	INTEGER NOT NULL,
+lo_linenumber 	INTEGER NOT NULL,
+lo_custkey 	INTEGER NOT NULL,
+lo_partkey 	INTEGER NOT NULL,
+lo_suppkey 	INTEGER NOT NULL,
+lo_orderdate 	INTEGER NOT NULL,
+lo_orderpriority 	VARCHAR(15) NOT NULL,
+lo_shippingcity 	VARCHAR(10) NOT NULL,
+lo_quantity 		INTEGER NOT NULL,
+lo_extendedprice 	INTEGER NOT NULL,
+lo_ordertotalprice 	INTEGER NOT NULL,
+lo_discount 	INTEGER NOT NULL,
+lo_revenue 	INTEGER NOT NULL,
+lo_supplycost 	INTEGER NOT NULL,
+lo_tax 	INTEGER NOT NULL,
+lo_commitdate 	INTEGER NOT NULL,
+lo_shipmode 	VARCHAR(10) NOT NULL
+);
+
+above all tables are empty tables we nees to load the data
+
+👉️now we need to load the data from s3 to this database table part
+👉️copy part from 's3://anand-redshift-abcd/LoadingDataSampleFiles/part-csv.tbl' credentials 'aws_access_key_id=AKIA3FYC6EOVJFDX7TEE;aws_secret_access_key=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' csv null as '\000';
+
+the above command is teh query to load the data from the s3 bucket to the table part. the data with in the s3 bucket is the with the table name part.
+
+
+
+
