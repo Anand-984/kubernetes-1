@@ -19,15 +19,15 @@
 
 3.ssh into the jenkins master servers(do the fallowing steps in both the master servers) 
 [root@ip-172-31-42-54 ~]# yum install nfs-utils
-[root@ip-172-31-42-54 ~]# mkdir  /var/lib/jenkins/
+[root@ip-172-31-42-54 ~]# mkdir  /var/lib/jenkins/jobs
 [root@ip-172-31-42-54 ~]# cd   /var/lib/jenkins/
 [root@ip-172-31-42-54 jenkins]# df -h    here you did not find any nfs mounts
 [root@ip-172-31-42-54 jenkins]# systemctl start nfs-server
 [root@ip-172-31-42-54 jenkins]# 		
-[root@ip-172-31-42-54 jenkins]# sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport fs-09f013b2f75905ba6.efs.us-east-1.amazonaws.com:/ /var/lib/jenkins  (we are mounting the nfs server to the /var/lib/jenkins directory)
+[root@ip-172-31-42-54 jenkins]# sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport fs-09f013b2f75905ba6.efs.us-east-1.amazonaws.com:/ /var/lib/jenkins/jobs  (we are mounting the nfs server to the /var/lib/jenkins/jobs directory)
 
 [root@ip-172-31-42-54 jenkins]# df -h
-fs-09f013b2f75905ba6.efs.us-east-1.amazonaws.com:/  8.0E     0  8.0E   0% /var/lib/jenkins
+fs-09f013b2f75905ba6.efs.us-east-1.amazonaws.com:/  8.0E     0  8.0E   0% /var/lib/jenkins/jobs
 
 now  
 
