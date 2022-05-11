@@ -1,0 +1,144 @@
+
+
+    internet======>AWS API Gateway=======>AWS lambda=======>DynamoDB Table
+                    step:3                  step:2             step:1
+
+dynamoDB ->lamdafuntion configure test event
+
+
+-------user PUT-----
+{
+ "operation": "create",
+ "payload":{
+ 	   "TableName":"bookstore",
+ 	   "Item":{
+ 	   "bookid":10,
+ 	   "auther":"Robert K",
+ 	   "bookname":"Rich Dad & Poor Dad",
+ 	   "Location":"USA",
+ 	   "State":"Hawaii"
+ 	   }
+ 	 }
+}
+ 	   
+ 	  
+-------user POST--------
+{
+ "operation":"read",
+ "payload":{
+ 	  "TableName":"bookstore",
+ 	  "key":{
+ 	  "bookid":10
+ 	  }
+ 	}
+ }
+ 
+ 
+ API Gateway create a method ->PUT->test
+ API Gateway create a method ->POST->test
+ 
+step1: Goto AWS DynamoDB console create table 
+Tablename: bookstore
+primary key: bookid      number {for each book there should be a unique bookid so thats why we are taken bookid as primarykey}
+use deafult settings and create the table
+
+step2: Goto aws lambda->create function->useblueprint->search for mobile->simple-mobile-backend
+A simple mobile backend (read/write to DynamoDB).->select and click on configure
+Function name: awsb24dydb
+Execution role: Create a new role with basic Lambda permissions ===={it automatically creates a role with name awsb24dydb.give the dynamodb access to this role ohter wise the test will fail}=====
+->click on create function.
+->click on test
+    Test event action :Create new event
+    Event name: testevent
+    Event sharing settings: Private
+
+{
+ "operation": "create",
+ "payload":{
+ 	   "TableName":"bookstore",
+ 	   "Item":{
+ 	   "bookid":10,
+ 	   "auther":"Robert K",
+ 	   "bookname":"Rich Dad & Poor Dad",
+ 	   "Location":"USA",
+ 	   "State":"Hawaii"
+ 	   }
+ 	 }
+}
+
+->click on save and test
+
+Execution result: failed(logs)
+Details
+{
+  "errorType": "AccessDeniedException",
+  "errorMessage": "User: arn:aws:sts::768268444586:assumed-role/awsb24dydb-role-cjsss9mh/awsb24dydb is not authorized to perform: dynamodb:PutItem on resource: arn:aws:dynamodb:us-east-1:768268444586:table/bookstore",
+  "trace": [
+    "AccessDeniedException: User: arn:aws:sts::768268444586:assumed-role/awsb24dydb-role-cjsss9mh/awsb24dydb is not authorized to perform: dynamodb:PutItem on resource: arn:aws:dynamodb:us-east-1:768268444586:table/bookstore",
+
+the above error shows because the role "awsb24dydb-role-cjsss9mh" doesnot have dynamodb permissions to write data into it.so goto IAM attach Dynamodb Fullaccess policy to the role.
+
+->then now test and see the Execution results as below
+===========
+Test Event Name
+testevent
+
+Response
+{}
+
+Function Logs
+START RequestId: a066b68b-70ee-4019-9fc0-aa95e48480d2 Version: $LATEST
+END RequestId: a066b68b-70ee-4019-9fc0-aa95e48480d2
+REPORT RequestId: a066b68b-70ee-4019-9fc0-aa95e48480d2	Duration: 884.53 ms	Billed Duration: 885 ms	Memory Size: 128 MB	Max Memory Used: 78 MB	Init Duration: 433.97 ms
+
+Request ID
+a066b68b-70ee-4019-9fc0-aa95e48480d2
+===========
+to observe this ,is the lambda funtion is really written the information to the dynamoDB or Not.
+->now goto Dynamodb console ->click on table bookstore->Explore table items->
+Items returned (1)
+	10	Robert K	Rich Dad & Poor Dad	USA	Hawaii
+	
+here you find the details.the lambda funtion is witten the data to the dynamoDB.
+
+
+step3: goto AWS APIgateway
+
+Choose an API type: REST API ->click on build
+Choose the protocol:  REST 
+Create new API:  New API
+Settings: API name*:bookstore   ->create api
+Goto Actions->create Resource->
+Resource Name*:bookid      ->create Resource
+select /bookid goto Actions->Create Method->select POST->click on ✔️ symbol
+Integration type:Lambda Function 
+ Lambda Region :us-east-1
+ Lambda Function: awsb24dydb   ->save
+lly select /bookid goto Actions->Create Method->select PUT-> click on ✔️ symbol
+Integration type:Lambda Function 
+ Lambda Region :us-east-1
+ Lambda Function: awsb24dydb   ->save
+ 
+ now select PUT->test->under Request Body->
+ 
+{
+ "operation": "create",
+ "payload":{
+ 	   "TableName":"bookstore",
+ 	   "Item":{
+ 	   "bookid":10,
+ 	   "auther":"Robert K",
+ 	   "bookname":"Rich Dad & Poor Dad",
+ 	   "Location":"USA",
+ 	   "State":"Hawaii"
+ 	   }
+  }
+}
+->test
+
+
+
+	
+	
+	
+
