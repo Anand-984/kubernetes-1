@@ -1,3 +1,7 @@
+when ever you increase/extended the root volume to the instance, the growpart command has to use when the vokume is in initialising state only.
+after initailisation of the root volume, if run the growpart command to map the extended volume to the root volume then it will not work.
+[ec2-user ~]$ sudo growpart /dev/xvda 1
+
 volumes are of two types in aws
 1.EBS volumes   
 
