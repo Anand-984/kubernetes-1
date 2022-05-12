@@ -202,7 +202,7 @@ Do you want to monitor any log files?
 default choice: [1]:
 1
 Log file path:
-/var/log
+/var/log/nginx/access.log
 Log group name:
 default choice: [log]
 log
@@ -234,7 +234,8 @@ The value -1 is not valid to this question.
 Please retry to answer:
 Log Group Retention in days
 1. -1
-2. 1
+2. 12022-05-12T04:49:08Z E! [telegraf] Error running agent: Error parsing /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.toml, open /usr/share/collectd/types.db: no such file or directory
+
 3. 3
 4. 5
 5. 7
@@ -283,8 +284,15 @@ Program exits now.
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:configuration-file-path
 
 👉️[root@ip-172-31-25-77 ~]# sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json    ====to start the cloudwatch agent===
-
-
+after running this command if you get ant error like below
+2022-05-12T04:49:08Z E! [telegraf] Error running agent: Error parsing /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.toml, open /usr/share/collectd/types.db: no such file or directory
+===ru the cloudwatch wizard config file ===sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-config-wizard=====
+Do you want to monitor metrics from CollectD? WARNING: CollectD must be installed or the Agent will fail to start
+1. yes
+2. no
+default choice: [1]:
+2
+=====here you select option 2======
 
 [ec2-user@ip-172-31-25-77 ~]$ sudo su -
 [root@ip-172-31-25-77 ~]# 
