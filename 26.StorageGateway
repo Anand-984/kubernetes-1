@@ -1,0 +1,81 @@
+================AWS Storage Gateway===========
+Storage gateway is used to move the data from your local datacenter to cloud.
+SGW is of three types 1.File Gateway
+      		       2.Volume Gateway
+      		       3.Tape Gateway
+      		   
+here we are using file Gateway to transfer files from your local datacenter to cloud.
+
+Assume local Datacenter as one EC2 instance.
+
+what ever the data/files which are stored in the ec2 is going to store in the s3 bucket. For that instead of using the aws cp commands rugularly to copy the data/files from the machine to s3 bucket here we are using the AWS Storage Gateway (SGW).
+
+In backed Storage Gateway is connected to the s3 bucket. EC2 is connected to the Storage gateway.
+
+Requirements: 1.one ec2 instance
+	      2. one s3 bucket
+	      3. Storage Gateway (that to file gateway)
+	      
+step 1: Launch one ec2 instance
+Step 2: create one s3 bucket
+step 3: Goto Storage Gateway -> Gateways ->Create gateway:
+ 					Gateway name:awsb24storagegw
+ 					Gateway type:Amazon S3 File Gateway
+ 					Platform options:Amazon EC2  (because we dont have local DataCenter)
+ 					
+Set up gateway on Amazon EC2
+
+Launch instance
+
+ 1.   Choose the Launch instance button above. This opens a new tab in the Amazon EC2 console.
+ 2.   On the Choose an Instance Type page, we recommend selecting at least m5.xlarge.
+ 3.   On the Configure Instance Details page, do the following:
+      a)  For Network, select the VPC that you want your EC2 instance to run in.
+      b) (Optional) For Subnet, specify the subnet that your EC2 instance should be launched in.
+      c)  For Auto-assign Public IP, select Enable.
+ 4.   On the Add Storage page, choose Add New Volume to add storage to your gateway instance.
+      a) You must add at least one Amazon EBS volume for cache storage with a size of at least 150 GiB, in addition to the Root volume. For increased performance, we recommend allocating multiple EBS volumes for cache storage with at least 150 GiB each.
+      b)  Configure Volume Type, IOPS, and Throughput based on your use case requirements.
+ 5.   (Optional) On the Add Tags page, add tags to your EC2 instance.
+ 6.   On the Configure Security Group page, add firewall rules to allow clients to connect to your instance. Amazon S3 File Gateway requires the following port to be open for inbound traffic: TCP 80 for one-time HTTP access during gateway activation. After activation, you can close this port if you want.
+       a) If you are planning to create NFS file shares, you must open the following ports: TCP/UDP 2049 for NFS access, TCP/UDP 111 and TCP/UDP 20048 for NFSv3 access.
+      b) If you are planning to create SMB file shares, you must open the following port: TCP 445 for SMB access.
+ 7.  Choose Review and Launch, and then choose Launch.
+ 8.  Before proceeding, navigate to the EC2 instance details, and make sure that Instance state is Running with a green check mark and that Status check has finished with a green check mark.
+ 9. Select the EC2 instance. On the Details tab, copy the Public IPv4 address of the EC2 instance..
+ 
+ 
+        Service endpoint:Publicly accessible
+        Gateway connection options:
+        			Connection options:
+        			    IP address: 35.171.87.114 (public ip of the Storage gateway instance)
+        			    
+        Configure cache storage ->
+                   Disk ID:/dev/sdb
+                   Capacity: 150 GiB (but we are taken 10Gib as EBS while launching the m5.xlarge for SGW )
+                   Allocated to: Cache
+                                         -> click on configure
+                                         
+ Now goto Storage Gateway ->Gateways ->select the gateway shich you have created(awsb24storagegw) -> on top select create fileshare ->
+ 					Amazon S3 bucket name: awsb24storagegw   (with this name we created a bucket)
+ 					AWS region: Choose the region where the S3 
+ 					Access objects using :Network File System (NFS)
+ 					
+ 					Allowed clients: 18.232.74.103 (Client must be a valid IP address or a valid CIDR block.) ec2-ip
+ 					
+ 					-> click on create
+ 					
+ now goto Storage Gateway ->File shares -> click on 	File share ID -> Example Commands :
+ 							mount -t nfs -o nolock,hard 172.31.35.71:/awsb24storagegw [MountPath]
+ 					
+ 					run the above command in your ec2 instace(i.e datacenter server)
+ 					
+ [root@ip-172-31-37-103 ~]# mkdir /sgwdir
+[root@ip-172-31-37-103 ~]# mount -t nfs -o nolock,hard 172.31.35.71:/awsb24storagegw /sgwdir/
+
+                   
+               
+  
+	      
+	   
+	     
