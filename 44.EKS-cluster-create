@@ -1,0 +1,174 @@
+=======AWS EKS cluster creation=====
+https://youtu.be/aZd0UolVwD4
+=====create cluster
+prerequisites: 1)create an IAM role with the permissions AmazonEKSClusterPolicy ======role for EKS cluster====
+		https://docs.aws.amazon.com/eks/latest/userguide/service_IAM_role.html#create-service-role
+		
+		create a dedicated vpc for cluster using the cloud formation template:
+		https://amazon-eks.s3.us-west-2.amazo
+		
+  Goto Amazon Elastic Kubernetes Service -> cluster -> Addcluster ->
+  							Name: eks-cluster
+  							Kubernetes version: 1.20
+  							Cluster service role: eksclusterRole  <which is create din the above step>
+  							->click on next
+  							VPC: select the dedicated vpc 
+  							Subnets: select the subnets
+  							Security groups: select the security group
+  							Cluster endpoint access: Public and private
+  							-> next
+  							Configure logging: if you want monitor your control plane components enable here.
+  							->next
+  							Review and create.
+			
+		Managed node group and Fargate profile cannot be added while the cluster eks-cluster is being created. Please wait
+		
+=====create node group		
+Creating a managed node group: https://docs.aws.amazon.com/eks/latest/userguide/create-managed-node-group.html
+		2)create an IAM role with the policys  AmazonEKSWorkerNodePolicy and AmazonEC2ContainerRegistryReadOnly and AmazonEKS_CNI_policy   ======role for Node group====
+		https://docs.aws.amazon.com/eks/latest/userguide/create-node-role.html
+		
+		
+		
+		
+		3)create IAM user with admin privilages to manages the cluster
+		Access key ID :AKIAVL3PKHKEBLZPQEDJ
+	        Secret access key :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
+	        
+	        4)launch one ec2 machine from there you are managing the cluster 
+	            i) install aws cli
+	            ii)aws configure    =====aws configure the user who created the cluster ex:root user credentials
+	            iii) install aws  iam authenticator ===https://www.vishalvyas.com/2019/08/install-aws-iam-authenticator-linux.html===
+	            iv)install kubectl
+	========   installing iam authenticator =======
+ubuntu@ip-172-31-40-141:~$ curl -o aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.13.7/2019-06-11/bin/linux/amd64/aws-iam-authenticator   =====makesure amd64 or arn64 ===by checking the AMI name of your instance.
+ubuntu@ip-172-31-40-141:~$ chmod +x ./aws-iam-authenticator
+ubuntu@ip-172-31-40-141:~$ mkdir -p $HOME/bin && cp ./aws-iam-authenticator $HOME/bin/aws-iam-authenticator && export PATH=$HOME/bin:$PATH
+ubuntu@ip-172-31-40-141:~$ echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
+ubuntu@ip-172-31-40-141:~$ aws-iam-authenticator help    ===to verify
+		  
+	====== intalling kubectl =======
+ubuntu@ip-172-31-40-141:~$ curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.21.2/2021-07-05/bin/linux/amd64/kubectl     ====makesure amd64/  0r arn64 =====other wise you will get struck here 
+ubuntu@ip-172-31-40-141:~$ chmod +x ./kubectl
+ubuntu@ip-172-31-40-141:~$ mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$PATH:$HOME/bin
+ubuntu@ip-172-31-40-141:~$ kubectl version --short --client
+		  
+ubuntu@ip-172-31-40-141:~$ aws eks --region us-east-1 update-kubeconfig --name eks-cluster
+Added new context arn:aws:eks:us-east-1:369063770760:cluster/eks-cluster to /home/ubuntu/.kube/config
+
+	          >aws eks --region <region-name> update-kubeconfig --name <your-cluster-name>
+	          	        
+	  perticular kubeconfig file is added into our local ec2 machine under .kube/config  this will have the complete information about the cluster.
+ubuntu@ip-172-31-40-141:~$ cat /home/ubuntu/.kube/config   ====if you dont have the config file the commands will wont work====
+ubuntu@ip-172-31-40-141:~$ export KUBECONFIG=~/.kube/config 
+ubuntu@ip-172-31-40-141:~$ kubectl get svc
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   10.100.0.1   <none>        443/TCP   119m
+
+ubuntu@ip-172-31-124-21:~$ kubectl get svc
+error: You must be logged in to the server (Unauthorized)    ===https://youtu.be/k8yzXNpPLL4
+
+ ip-172-31-40-141= the instance configured the IAM user who created the cluster
+ ip-172-31-124-21= the instance configured the IAMuser/role who doesnot created the cluster but they need to communicat with it to run kubectl commands.
+
+=====only the user who created the cluster has the access to 
+
+ubuntu@ip-172-31-40-141:~$ aws sts get-caller-identity        ===== shows the current user that i configured in the instace to use====
+{
+    "UserId": "369063770760",
+    "Account": "369063770760",
+    "Arn": "arn:aws:iam::369063770760:root"
+}  
+
+ubuntu@ip-172-31-40-141:~$ aws eks --region us-east-1 update-kubeconfig --name eks-cluster ===as this root user is the same cluster creator we update the kube config file with this command===
+*the resulting kube config path is created at the default kubeconfig path(.kube/config) in your home directory
+*so the kubectl command line tool uses the the kubeconfig file to find the information about a cluster and to unserstad how to communicate with the API server of that cluster.
+
+*now the aws root user is the cluster creator and we configured the root user credentials, root is able to perform kubectl commands
+such as kubectl get svc.
+ubuntu@ip-172-31-40-141:~$ kubectl get svc
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   10.100.0.1   <none>        443/TCP   119m
+
+
+*However if we switch the IAM user who is not created the cluster /Any role then we cant communicate with the cluster with kubectl commands
+  switch to another server 
+ubuntu@ip-172-31-124-21:~$ aws sts get-caller-identity       =====by running this command you will find the user/role arn====
+{
+    "UserId": "AIDAVL3PKHKEAUUKAUZUI",
+    "Account": "369063770760",
+    "Arn": "arn:aws:iam::369063770760:user/eksuser"
+}
+ubuntu@ip-172-31-124-21:~$ aws eks --region us-east-1 update-kubeconfig --name eks-cluster
+ubuntu@ip-172-31-124-21:~$ kubectl get svc
+error: You must be logged in to the server (Unauthorized)     ====beause the IAM role that attached to the instance doesnt have permissions====
+
+so from cluster creator window/terminal we add permissions to the iam role this enables the instance to communicate with the cluster using kubectl command.
+
+ubuntu@ip-172-31-40-141:~$  kubectl edit configmap aws-auth -n kube-system  (or) kubectl edit -n kube-system configmap/aws-auth   ====https://aws.amazon.com/premiumsupport/knowledge-center/eks-api-server-unauthorized-error/ =====
+===https://stackoverflow.com/questions/50791303/kubectl-error-you-must-be-logged-in-to-the-server-unauthorized-when-accessing==
+# Please edit the object below. Lines beginning with a '#' will be ignored,
+# and an empty file will abort the edit. If an error occurs while saving this file will be
+# reopened with the relevant failures.
+#
+apiVersion: v1
+data:
+  mapRoles: |
+    - groups:
+      - system:bootstrappers
+      - system:nodes
+      rolearn: arn:aws:iam::369063770760:role/AmazonEKSNodeRole
+      username: system:node:{{EC2PrivateDNSName}}
+  mapUsers: |                                                                  ========from=============
+    - userarn: arn:aws:iam::369063770760:user/eksuser       = add the userarn which is attached to the instance=
+      username: eksuser                                      = user name=
+      groups:
+         - system:masters                       =add to mastergroup              =========to==========
+kind: ConfigMap
+metadata:
+  creationTimestamp: "2022-05-13T09:17:48Z"
+  name: aws-auth
+  namespace: kube-system
+  resourceVersion: "26736"
+  uid: c1b84d1c-2b72-450e-a17a-85a6254c4b4f
+
+
+===In case if you attached an Role to the instance, under mapRoles we will add the rolearn and we will give it system master permission. the system master group allows super user access  to perform any action on any resource.
+
+ubuntu@ip-172-31-124-21:~$As the IAM user, run the following command:
+                         $ aws eks update-kubeconfig --name eks-cluster-name --region aws-region
+               As the IAM role, run the following command:
+              $ aws eks update-kubeconfig --name eks-cluster-name --region aws-region --role-arn arn:aws:iam::XXXXXXXXXXXX:role/testrole
+ 
+ ubuntu@ip-172-31-124-21:~$  kubectl config view --minify    =====To confirm that the kubeconfig file is updated===
+  ubuntu@ip-172-31-124-21:~$  kubectl get svc 
+            
+
+
+
+
+
+How do I resolve an unauthorized server error when I connect to the Amazon EKS API server?: https://aws.amazon.com/premiumsupport/knowledge-center/eks-api-server-unauthorized-error/
+
+
+
+$ aws eks update-kubeconfig --name eks-cluster --region us-east-1 --role-arn arn:aws:iam::369063770760:user/eksuser
+$ kubectl config view --minify
+
+
+Access Key ID:
+AKIAVL3PKHKEK5NGLOOU
+Secret Access Key:
+JZACDggpIPivaVMwt0SJrU00GuXNEDpSCwLT9mwX
+
+     
+    
+	  
+	          
+
+
+	            
+	          
+	        
+	       
+

@@ -1,0 +1,61 @@
+========to run the kubectl command as IAMuser/role who is not created the cluster====
+==install the aws cli===
+ubuntu@ip-172-31-35-138:~$ curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+ubuntu@ip-172-31-35-138:~$ sudo apt install unzip
+ubuntu@ip-172-31-35-138:~$ unzip awscliv2.zip
+ubuntu@ip-172-31-35-138:~$ sudo ./aws/install
+ubuntu@ip-172-31-35-138:~$ aws --version
+ubuntu@ip-172-31-35-138:~$ aws configure
+ubuntu@ip-172-31-35-138:~$ aws sts get-caller-identity     ====by runnig this command you will get the use/role arn
+=====install the iam authenticator ====check by checkig you AMI name  amd64 or arn64=====   
+ubuntu@ip-172-31-35-138:~$ curl -o aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.13.7/2019-06-11/bin/linux/amd64/aws-iam-authenticator
+ubuntu@ip-172-31-35-138:~$ chmod +x ./aws-iam-authenticator
+ubuntu@ip-172-31-35-138:~$ mkdir -p $HOME/bin && cp ./aws-iam-authenticator $HOME/bin/aws-iam-authenticator && export PATH=$HOME/bin:$PATH
+ubuntu@ip-172-31-35-138:~$ echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
+ubuntu@ip-172-31-35-138:~$ aws-iam-authenticator help
+======install kubectl utility====  ====check by checkig you AMI name  amd64 or arn64===== 
+ubuntu@ip-172-31-35-138:~$ curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.21.2/2021-07-05/bin/linux/amd64/kubectl
+ubuntu@ip-172-31-35-138:~$ chmod +x ./kubectl
+ubuntu@ip-172-31-35-138:~$ mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl && export PATH=$PATH:$HOME/bin
+ubuntu@ip-172-31-35-138:~$ kubectl version --short --client
+ubuntu@ip-172-31-35-138:~$ aws sts get-caller-identity
+{
+    "UserId": "AIDAVL3PKHKEAUUKAUZUI",
+    "Account": "369063770760",
+    "Arn": "arn:aws:iam::369063770760:user/eksuser"
+}
+
+ =====edit the config map === this can be edited by the IAMuser who ceated the cluster====
+ =====the below instance is ip-172-31-40-141 configured with the IAM user who created the cluste====
+ubuntu@ip-172-31-40-141:~$  kubectl edit configmap aws-auth -n kube-system  (or) kubectl edit -n kube-system configmap/aws-auth
+apiVersion: v1
+data:
+  mapRoles: |
+    - groups:
+      - system:bootstrappers
+      - system:nodes
+      rolearn: arn:aws:iam::369063770760:role/AmazonEKSNodeRole
+      username: system:node:{{EC2PrivateDNSName}}
+  mapUsers: |                                                                  ========from=============
+    - userarn: arn:aws:iam::369063770760:user/eksuser       = add the userarn which is attached to the instance ip-172-31-35-138=
+      username: eksuser                                      = user name=
+      groups:
+         - system:masters                       =add to mastergroup              =========to==========
+kind: ConfigMap
+metadata:
+  creationTimestamp: "2022-05-13T09:17:48Z"
+  name: aws-auth
+  namespace: kube-system
+  resourceVersion: "26736"
+  uid: c1b84d1c-2b72-450e-a17a-85a6254c4b4f  
+  
+===after editing this file, the IAMuser/role who is not created the cluster which is attached to the instance can run the kubectl commands
+
+ubuntu@ip-172-31-35-138:~$ aws eks --region us-east-1 update-kubeconfig --name eks-cluster
+the resulting kube config path is created at the default kubeconfig path(.kube/config) in your home directory
+*so the kubectl command line tool uses the the kubeconfig file to find the information about a cluster and to unserstad how to communicate with the API server of that cluster.
+
+ubuntu@ip-172-31-35-138:~$ kubectl get nodes
+ubuntu@ip-172-31-35-138:~/.kube$ kubectl get ns
+ ====all kubectl commands will work from this instance aswell eventhough the role/user which is not created the cluster====
+
