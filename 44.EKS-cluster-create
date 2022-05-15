@@ -33,7 +33,7 @@ Creating a managed node group: https://docs.aws.amazon.com/eks/latest/userguide/
 		
 		3)create IAM user with admin privilages to manages the cluster
 		Access key ID :AKIAVL3PKHKEBLZPQEDJ
-	        Secret access key :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
+	        Secret access key :XoWGMQtLQs
 	        
 	        4)launch one ec2 machine from there you are managing the cluster 
 	            i) install aws cli
@@ -159,7 +159,7 @@ $ kubectl config view --minify
 Access Key ID:
 AKIAVL3PKHKEK5NGLOOU
 Secret Access Key:
-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
+JZACDggpIPivaV
 
      
     
