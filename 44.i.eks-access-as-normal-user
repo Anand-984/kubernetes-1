@@ -20,7 +20,7 @@ ubuntu@ip-172-31-35-138:~$ mkdir -p $HOME/bin && cp ./kubectl $HOME/bin/kubectl 
 ubuntu@ip-172-31-35-138:~$ kubectl version --short --client
 ubuntu@ip-172-31-35-138:~$ aws sts get-caller-identity
 {
-    "UserId": "AIDAVL3PKHKEAUUKAUZUI",
+    "UserId": "AIDAVL3PKKAUZUI",
     "Account": "369063770760",
     "Arn": "arn:aws:iam::369063770760:user/eksuser"
 }
