@@ -1,0 +1,82 @@
+https://www.tecmint.com/deploy-nginx-on-a-kubernetes-cluster/
+
+All the commands are running from management server
+
+[root@ip-10-0-1-146 opt]# kubectl get nodes
+NAME                         STATUS   ROLES    AGE     VERSION
+ip-10-0-1-176.ec2.internal   Ready    <none>   7h41m   v1.20.11-eks-f17b81
+ip-10-0-2-72.ec2.internal    Ready    <none>   7h41m   v1.20.11-eks-f17b81
+[root@ip-10-0-1-146 opt]# kubectl create deployment nginx --image=nginx
+deployment.apps/nginx created
+[root@ip-10-0-1-146 opt]# kubectl get deployments
+NAME    READY   UP-TO-DATE   AVAILABLE   AGE
+nginx   1/1     1            1           15s
+[root@ip-10-0-1-146 opt]# kubectl describe deployment nginx
+Name:                   nginx
+Namespace:              default
+CreationTimestamp:      Sun, 22 May 2022 13:44:55 +0000
+Labels:                 app=nginx
+Annotations:            deployment.kubernetes.io/revision: 1
+Selector:               app=nginx
+Replicas:               1 desired | 1 updated | 1 total | 1 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:  app=nginx
+  Containers:
+   nginx:
+    Image:        nginx
+    Port:         <none>
+    Host Port:    <none>
+    Environment:  <none>
+    Mounts:       <none>
+  Volumes:        <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+OldReplicaSets:  <none>
+NewReplicaSet:   nginx-6799fc88d8 (1/1 replicas created)
+Events:
+  Type    Reason             Age   From                   Message
+  ----    ------             ----  ----                   -------
+  Normal  ScalingReplicaSet  33s   deployment-controller  Scaled up replica set nginx-6799fc88d8 to 1
+[root@ip-10-0-1-146 opt]# kubectl create service nodeport nginx --tcp=80:80
+service/nginx created
+[root@ip-10-0-1-146 opt]# kubectl get svc
+NAME         TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+kubernetes   ClusterIP   172.20.0.1       <none>        443/TCP        7h54m
+nginx        NodePort    172.20.163.108   <none>        80:30369/TCP   18s
+[root@ip-10-0-1-146 opt]# curl ip-10-0-1-176.ec2.internal:30369
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+html { color-scheme: light dark; }
+body { width: 35em; margin: 0 auto;
+font-family: Tahoma, Verdana, Arial, sans-serif; }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+[root@ip-10-0-1-146 opt]# kubectl get svc
+NAME         TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+kubernetes   ClusterIP   172.20.0.1       <none>        443/TCP        7h57m
+nginx        NodePort    172.20.163.108   <none>        80:30369/TCP   4m              here 80 is containerport and 30369 is nodeport
+
+now take the public-ip of any of your nodegroup servers     http://34.236.147.71:30369/ ====30369 port should be open in security groups
+
