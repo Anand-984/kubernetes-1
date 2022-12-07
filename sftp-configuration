@@ -11,6 +11,11 @@ root@ip-172-31-31-29:~# chmod 755 /home/sftp/sftpdir/
 root@ip-172-31-31-29:~# chown sftp:sftponly /home/sftp/sftpdir/
 root@ip-172-31-31-29:~# vim /etc/ssh/sshd_config    ===add the below lines at the bottom of the configuration file
 
+
+# override default of no subsystems
+#Subsystem      sftp    /usr/lib/openssh/sftp-server  =====>  makesure to comment this line otherwise if you login in to the server next time it will not allow you to login
+
+
 Port 22
 Subsystem       sftp    internal-sftp
 Match Group sftponly
